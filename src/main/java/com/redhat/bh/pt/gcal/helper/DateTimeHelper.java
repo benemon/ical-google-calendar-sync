@@ -1,20 +1,19 @@
 package com.redhat.bh.pt.gcal.helper;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.temporal.TemporalUnit;
 import java.util.Date;
 
 import org.apache.commons.lang3.time.DateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.EventDateTime;
 
 public class DateTimeHelper {
+
+	private static final Logger LOG = LoggerFactory.getLogger(DateTimeHelper.class);
 
 	private static SimpleDateFormat gcalSdf = new SimpleDateFormat("yyyy-MM-dd");
 	private static SimpleDateFormat icalSdf = new SimpleDateFormat("yyyyMMdd");
@@ -79,8 +78,7 @@ public class DateTimeHelper {
 		try {
 			excludedEndDate = DateTimeHelper.plusDate(icalSdf.parse(endDateString), 1);
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Error occurred on computeEndDateFromRRule()", e);
 		}
 
 		return excludedEndDate;
