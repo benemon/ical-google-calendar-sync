@@ -27,7 +27,10 @@ parameters:
 - description: The source iCalendar endpoint
   name: ICAL_HTTP_ENDPOINT
   required: true
-
+- description: The Maven release version of this build
+  name: RELEASE_VERSION
+  value: 1.0-SNAPSHOT
+  required: true
 
 objects:
 - apiVersion: v1
@@ -91,7 +94,6 @@ objects:
       version: 2.2.0.redhat-079
     name: ${SERVICE_NAME}
     
-
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
@@ -99,6 +101,7 @@ objects:
     labels:
          component: ${SERVICE_NAME}
          container: java
+         delete: calendar-sync-template
          deploymentconfig: ${SERVICE_NAME}
          version: 2.2.0.redhat-079
     name: ${SERVICE_NAME}
