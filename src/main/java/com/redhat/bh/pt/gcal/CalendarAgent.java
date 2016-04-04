@@ -59,6 +59,7 @@ public class CalendarAgent {
 	private static final String LOG_ADDED_EVENTS = "Added %d events to Calendar %s";
 
 	private static final String ICAL_RECURRENCE_PROPETRY_ID = "RRULE";
+	private static final String NON_BILLABLE_KEY = "non-billable";
 
 	private static com.google.api.services.calendar.Calendar client;
 
@@ -349,8 +350,21 @@ public class CalendarAgent {
 
 				gcalEvent.setStart(DateTimeHelper.gteEventDateTimeForDate(startDate));
 				gcalEvent.setEnd(DateTimeHelper.gteEventDateTimeForDate(endDate));
-				gcalEvent.setSummary(String.format(SUMMARY_MASK, v.getSummary().getValue(), v.getStatus().getValue()));
-				gcalEvent.setDescription(v.getDescription().getValue());
+
+				// Null checks on optional fields
+				String summary = v.getSummary() != null ? v.getSummary().getValue() : "";
+				String description = v.getDescription() != null ? v.getDescription().getValue() : "";
+				String status = v.getStatus() != null ? v.getStatus().getValue() : "";
+
+				// Fixes use case where ics summary is only filled out for
+				// billable activity in PT
+				if (summary.equalsIgnoreCase(NON_BILLABLE_KEY)) {
+					gcalEvent.setSummary(String.format(SUMMARY_MASK, description, status));
+				} else {
+					gcalEvent.setSummary(String.format(SUMMARY_MASK, summary, status));
+				}
+
+				gcalEvent.setDescription(description);
 				gcalEvent.setICalUID(String.format(VERSION_MASK, System.currentTimeMillis(), v.getUid().getValue()));
 				events.add(gcalEvent);
 			}
