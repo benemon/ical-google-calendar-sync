@@ -29,7 +29,7 @@ import org.apache.camel.cdi.Uri;
 public class MyRoutes extends RouteBuilder {
 
 	@Inject
-	@Uri("scheduler://icsPoll?delay={{env:GCAL_REFRESH_RATE_SECONDS}}")
+	@Uri("timer://icsPoll?fixedRate=true&period={{env:GCAL_REFRESH_RATE_SECONDS}}s")
 	private Endpoint inputEndpoint;
 
 	@Inject
