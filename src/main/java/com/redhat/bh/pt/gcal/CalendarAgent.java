@@ -49,6 +49,10 @@ public class CalendarAgent {
 	private static final String SUMMARY_MASK = "%s - %s";
 
 	private static final String VERSION_MASK = "v%d-%s";
+	
+	private static final String LOG_ADDED_CALENDAR = "Calendar %s is not present. Creating...";
+	private static final String LOG_CLEARED_EVENTS = "Cleared %d events from Calendar %s";
+	private static final String LOG_ADDED_EVENTS = "Added %d events to Calendar %s";
 
 	private static final String ICAL_RECURRENCE_PROPETRY_ID = "RRULE";
 
@@ -188,6 +192,7 @@ public class CalendarAgent {
 					}
 
 					batchDelete.execute();
+					System.out.println(String.format(LOG_CLEARED_EVENTS, events.getItems().size(), calendarName));
 				}
 
 			}
@@ -213,6 +218,7 @@ public class CalendarAgent {
 				targetCalendar = new com.google.api.services.calendar.model.Calendar();
 				targetCalendar.setSummary(calendarName);
 				targetCalendar = client.calendars().insert(targetCalendar).execute();
+				System.out.println(String.format(LOG_ADDED_CALENDAR, calendarName));
 			}
 
 		} catch (IOException e) {
@@ -270,6 +276,7 @@ public class CalendarAgent {
 			}
 
 			batchImport.execute();
+			System.out.println(String.format(LOG_ADDED_EVENTS, events.size(), calendar.getSummary()));
 
 		} catch (IOException e) {
 			e.printStackTrace();
