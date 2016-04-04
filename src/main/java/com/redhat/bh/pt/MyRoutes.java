@@ -27,7 +27,7 @@ import com.redhat.bh.pt.gcal.conf.ProjectConfiguration;
 /**
  * Configures all our Camel routes, components, endpoints and beans
  */
-@ContextName("camelCOntext")
+@ContextName("camelContext")
 public class MyRoutes extends RouteBuilder {
 
 	@Inject
@@ -52,14 +52,14 @@ public class MyRoutes extends RouteBuilder {
 		
 		from(inputEndpoint)
 		.id("gcalUpdateRoute")
-		.to(icalEndpoint)
-		.log("Beginning update")
-		.beanRef("calendarUpdateProcess")
-		.choice()
+		.to(icalEndpoint).id("ical-source")
+		.log("Beginning update").id("start-log")
+		.beanRef("calendarUpdateProcess").id("calendar-processor")
+		.choice().id("output-msg-selector")
 			.when().simple(String.format(HEADER_IN_FORMAT, ProjectConfiguration.HEADER_IMPORT_RESULT) + "== true")
-				.log("Update completed successfully")
+				.log("Update completed successfully").id("output-msg-success")
 			.otherwise()
-				.log("Update failed");
+				.log("Update failed").id("output-msg-fail");
 	}
 
 }
