@@ -12,14 +12,19 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.commons.io.IOUtils;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.services.calendar.model.Calendar;
+import com.redhat.bh.pt.gcal.conf.ProjectConfiguration;
 
 @Singleton
 @Named("calendarUpdateProcess")
 public class CalendarUpdateProcessBean {
+
+	private static final Logger LOG = LoggerFactory.getLogger(CalendarUpdateProcessBean.class);
 
 	@Inject
 	private CalendarAgent calendarAgent;
@@ -55,15 +60,16 @@ public class CalendarUpdateProcessBean {
 		try {
 			IOUtils.copy(body, writer, "UTF-8");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Error occurred in processICS()", e);
 		}
 
 		GoogleCredential credential = calendarAgent.authorise(clientToken, accessToken, refreshToken, token);
 		calendarAgent.clearPTCalendar(credential, ptCalendarName);
 		Calendar calendar = calendarAgent.createPTCalendar(credential, ptCalendarName);
-		calendarAgent.importCalendar(credential, calendar, writer.toString());
-
+		boolean success = calendarAgent.importCalendar(credential, calendar, writer.toString());
+		exchange.getIn().setHeader(ProjectConfiguration.HEADER_IMPORT_RESULT, success);
+		
+		LOG.debug(String.format("Completed route with result: %B", success));
 	}
 
 }

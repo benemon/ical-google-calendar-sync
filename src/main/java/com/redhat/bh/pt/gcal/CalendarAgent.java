@@ -17,6 +17,8 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
@@ -46,10 +48,12 @@ import net.fortuna.ical4j.model.component.VEvent;
 @Named("calendarAgent")
 public class CalendarAgent {
 
+	private static final Logger LOG = LoggerFactory.getLogger(CalendarAgent.class);
+
 	private static final String SUMMARY_MASK = "%s - %s";
 
 	private static final String VERSION_MASK = "v%d-%s";
-	
+
 	private static final String LOG_ADDED_CALENDAR = "Calendar %s is not present. Creating...";
 	private static final String LOG_CLEARED_EVENTS = "Cleared %d events from Calendar %s";
 	private static final String LOG_ADDED_EVENTS = "Added %d events to Calendar %s";
@@ -67,7 +71,7 @@ public class CalendarAgent {
 		try {
 			httpTransport = GoogleNetHttpTransport.newTrustedTransport();
 		} catch (GeneralSecurityException | IOException e) {
-			System.exit(1);
+			LOG.error("Error occurred on CalendarAgent()", e);
 		}
 	}
 
@@ -79,8 +83,7 @@ public class CalendarAgent {
 			InputStreamReader is = new InputStreamReader(new FileInputStream(clientSecretsLocation));
 			clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, is);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Error occurred on authorise()", e);
 		}
 		GoogleCredential cred = new GoogleCredential.Builder().setTransport(httpTransport).setJsonFactory(JSON_FACTORY)
 				.setClientSecrets(clientSecrets).build().setFromTokenResponse(tokenResponse);
@@ -106,8 +109,7 @@ public class CalendarAgent {
 
 			list = client.calendarList().list().execute();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Error occurred on getCalendarList()", e);
 		}
 
 		return list;
@@ -129,8 +131,7 @@ public class CalendarAgent {
 
 			listEntry = calendarListEntryOptional.get();
 		} catch (NoSuchElementException | IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Error occurred on getCalendarListEntry()", e);
 		}
 
 		return listEntry;
@@ -149,8 +150,7 @@ public class CalendarAgent {
 			try {
 				calendar = client.calendars().get(listEntry.getId()).execute();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				LOG.error("Error occurred on getCalendar()", e);
 			}
 		}
 
@@ -183,7 +183,7 @@ public class CalendarAgent {
 
 						@Override
 						public void onFailure(GoogleJsonError e, HttpHeaders responseHeaders) {
-							System.out.println("Error Message: " + e.getMessage());
+							LOG.error("Error Message: " + e.getMessage());
 						}
 					};
 
@@ -192,13 +192,13 @@ public class CalendarAgent {
 					}
 
 					batchDelete.execute();
-					System.out.println(String.format(LOG_CLEARED_EVENTS, events.getItems().size(), calendarName));
+					LOG.info(String.format(LOG_CLEARED_EVENTS, events.getItems().size(), calendarName));
 				}
 
 			}
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOG.error("Error occurred on clearPTCalendar()", e);
 			success = false;
 		}
 		return success;
@@ -218,11 +218,11 @@ public class CalendarAgent {
 				targetCalendar = new com.google.api.services.calendar.model.Calendar();
 				targetCalendar.setSummary(calendarName);
 				targetCalendar = client.calendars().insert(targetCalendar).execute();
-				System.out.println(String.format(LOG_ADDED_CALENDAR, calendarName));
+				LOG.info(String.format(LOG_ADDED_CALENDAR, calendarName));
 			}
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOG.error("Error occurred on createPTCalendar()", e);
 		}
 		return targetCalendar;
 	}
@@ -266,7 +266,7 @@ public class CalendarAgent {
 
 				@Override
 				public void onFailure(GoogleJsonError e, HttpHeaders responseHeaders) {
-					System.out.println("Error Message: " + e.getMessage());
+					LOG.error("Error occurred on importCalendarContent()", e);
 				}
 			};
 
@@ -276,10 +276,10 @@ public class CalendarAgent {
 			}
 
 			batchImport.execute();
-			System.out.println(String.format(LOG_ADDED_EVENTS, events.size(), calendar.getSummary()));
+			LOG.info(String.format(LOG_ADDED_EVENTS, events.size(), calendar.getSummary()));
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOG.error("Error occurred on importCalendarContent()", e);
 			success = false;
 		}
 

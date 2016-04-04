@@ -22,10 +22,12 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.cdi.ContextName;
 import org.apache.camel.cdi.Uri;
 
+import com.redhat.bh.pt.gcal.conf.ProjectConfiguration;
+
 /**
  * Configures all our Camel routes, components, endpoints and beans
  */
-@ContextName("camelRoute")
+@ContextName("camelCOntext")
 public class MyRoutes extends RouteBuilder {
 
 	@Inject
@@ -39,14 +41,25 @@ public class MyRoutes extends RouteBuilder {
 	@Inject
 	@Uri("log:output")
 	private Endpoint resultEndpoint;
+	
+	private static final String HEADER_IN_FORMAT = "${in.header.%s}";
 
 	// Properties
 	@Override
 	public void configure() throws Exception {
 
 		this.getContext().setStreamCaching(true);
-		from(inputEndpoint).id("gcalUpdateRoute").to(icalEndpoint).log("${body}").beanRef("calendarUpdateProcess")
-				.log("Update completed");
+		
+		from(inputEndpoint)
+		.id("gcalUpdateRoute")
+		.to(icalEndpoint)
+		.log("Beginning update")
+		.beanRef("calendarUpdateProcess")
+		.choice()
+			.when().simple(String.format(HEADER_IN_FORMAT, ProjectConfiguration.HEADER_IMPORT_RESULT) + "== true")
+				.log("Update completed successfully")
+			.otherwise()
+				.log("Update failed");
 	}
 
 }
