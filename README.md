@@ -4,24 +4,24 @@ This is a small project based on Camel and Fuse Integration Services, to syncron
 
 The following environment variables need to be set:
 
-* **GCAL_ACCESS_TOKEN**
+* **GCAL_ACCESS_TOKEN**  
 The Google Calendar API Access Token. Source from https://developers.google.com/oauthplayground/
 
-* **GCAL_REFRESH_TOKEN**
+* **GCAL_REFRESH_TOKEN**  
 The Google Calendar API Refresh Token. Source from https://developers.google.com/oauthplayground/. Will be refreshed by the route as required.
 
-* **GCAL_CLIENT_TOKEN_FILE**
+* **GCAL_CLIENT_TOKEN_FILE**  
 The location of the Google Calendar API Token. Downloadable from https://console.developers.google.com/.
 
-* **GCAL_REFRESH_RATE_SECONDS**
+* **GCAL_REFRESH_RATE_SECONDS**  
 The rate at which we want to refresh Google Calendar from the iCalendar source
 
-* **GCAL_TARGET_CALENDAR**
+* **GCAL_TARGET_CALENDAR**  
 The target Google Calendar. Will be created if it doesn't exist. 
 
 **NOTE: DO NOT MAKE THIS YOUR PRIMARY CALENDAR. ALL YOUR CONTENT WILL BE DELETED IF YOU DO. I CANNOT STRESS HIGHLY ENOUGH HOW MUCH OF A BAD IDEA THAT IS.**
 
-* **ICAL_ENDPOINT**
+* **ICAL_ENDPOINT**  
 The source iCalendar endpoint
 
 ----------
@@ -47,10 +47,10 @@ This adds a new Secret 'gcal' to the namespace.
 
 After providing the secret, the following parameters must be taken into account in the S2I template, in addition to those provided above.
 
- * **GCAL_CLIENT_TOKEN_VOLUME**
+ * **GCAL_CLIENT_TOKEN_VOLUME**  
 The Volume in which to mount the GCAL_CLIENT_TOKEN_FILE. Must include trailing slash (long story). Thereafter, GCAL_CLIENT_TOKEN_FILE simply becomes the file name, rather than the entire path.
 
- * **GCAL_CLIENT_TOKEN_FILE_SECRET**
+ * **GCAL_CLIENT_TOKEN_FILE_SECRET**  
 The name of the OpenShift Secret into which the GCAL_CLIENT_TOKEN_FILE has been passed. This is the object mounted as a Volume within the Pod. Must be created before this template is instantiated.
 
 The application template can then be instatiated, providing the environment variables listed above as parameters on either the OpenShift CLI, or the Web Console.
