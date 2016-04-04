@@ -172,7 +172,7 @@ objects:
           resources: {}
           volumeMounts:
             - name: secret-volume
-              mountPath: ${GCAL_CLIENT_TOKEN_VOLUME}${GCAL_CLIENT_TOKEN_FILE}
+              mountPath: ${GCAL_CLIENT_TOKEN_VOLUME}
           terminationMessagePath: /dev/termination-log
         dnsPolicy: ClusterFirst
         restartPolicy: Always
