@@ -30,9 +30,6 @@ parameters:
 
 
 objects:
-
-    
-  
 - apiVersion: v1
   kind: BuildConfig
   metadata:
@@ -55,7 +52,7 @@ objects:
     source:   
       git:
         ref: master
-        uri: https://github.com/benemon/<blah>
+        uri: https://github.com/benemon/ical-google-calendar-sync
       type: Git
     strategy:
       sourceStrategy:
@@ -80,7 +77,6 @@ objects:
       type: ImageChange
   status:
     lastVersion: 0
-    
         
 - apiVersion: v1
   kind: ImageStream
