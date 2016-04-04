@@ -1,0 +1,179 @@
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: calendar-sync-template
+  
+parameters:
+- description: The Google Calendar API Access Token. Source from https://developers.google.com/oauthplayground/
+  name: SERVICE_NAME
+  value: calendar-sync-service
+  required: true
+- description: The Google Calendar API Access Token. Source from https://developers.google.com/oauthplayground/
+  name: GCAL_ACCESS_TOKEN
+  required: true
+- description: The location of the Google Calendar API Token. Downloadable from https://console.developers.google.com/. Should be loaded into a Secret.
+  name: GCAL_CLIENT_TOKEN_FILE
+  required: true
+- description: The rate at which we want to refresh Google Calendar from the iCalendar source
+  name: GCAL_REFRESH_RATE_SECONDS
+  required: true
+- description: The Google Calendar API Refresh Token. Source from https://developers.google.com/oauthplayground/
+  name: GCAL_REFRESH_TOKEN
+  required: true
+- description: The target Google Calendar
+  name: GCAL_TARGET_CALENDAR
+  required: true
+- description: The source iCalendar endpoint
+  name: ICAL_HTTP_ENDPOINT
+  required: true
+
+
+objects:
+
+    
+  
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: ${SERVICE_NAME}
+      container: java
+      delete: calendar-sync-template
+      group: quickstarts
+      project: ${SERVICE_NAME}
+      provider: s2i
+      version: 2.2.0.redhat-079
+    name: ${SERVICE_NAME}
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${SERVICE_NAME}:latest
+    resources: {}
+    source:   
+      git:
+        ref: master
+        uri: https://github.com/benemon/<blah>
+      type: Git
+    strategy:
+      sourceStrategy:
+        env:
+        - name: BUILD_LOGLEVEL
+          value: "5"
+        - name: ARTIFACT_DIR
+        - name: MAVEN_ARGS
+          value: package -DskipTests -e
+        - name: MAVEN_ARGS_APPEND
+        - name: RELEASE_VERSION
+          value: ${RELEASE_VERSION}
+        forcePull: true
+        from:
+          kind: ImageStreamTag
+          name: fis-java-openshift:1.0
+          namespace: openshift
+      type: Source
+    triggers:
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+  status:
+    lastVersion: 0
+    
+        
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/image.dockerRepositoryCheck: 2016-03-07T16:25:19Z
+    creationTimestamp: null
+    labels:
+      component: ${SERVICE_NAME}
+      container: java
+      delete: calendar-sync-template
+      version: 2.2.0.redhat-079
+    name: ${SERVICE_NAME}
+    
+
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    creationTimestamp: null
+    labels:
+         component: ${SERVICE_NAME}
+         container: java
+         deploymentconfig: ${SERVICE_NAME}
+         version: 2.2.0.redhat-079
+    name: ${SERVICE_NAME}
+  spec:
+    replicas: 1
+    selector:
+          component: ${SERVICE_NAME}
+          container: java
+          deploymentconfig: ${SERVICE_NAME}
+          version: 2.2.0.redhat-079
+    strategy:
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          component: ${SERVICE_NAME}
+          container: java
+          deploymentconfig: ${SERVICE_NAME}
+          version: 2.2.0.redhat-079
+      spec:
+        containers:
+        - env:
+          - name: GCAL_ACCESS_TOKEN
+            value: ${GCAL_ACCESS_TOKEN}
+          - name: GCAL_CLIENT_TOKEN_FILE
+            value: ${GCAL_CLIENT_TOKEN_FILE}
+          - name: GCAL_REFRESH_TOKEN
+            value: ${GCAL_REFRESH_TOKEN}  
+          - name: GCAL_REFRESH_RATE_SECONDS
+            value: ${GCAL_REFRESH_RATE_SECONDS}   
+          - name: GCAL_TARGET_CALENDAR
+            value: ${GCAL_TARGET_CALENDAR}  
+          - name: ICAL_ENDPOINT
+            value: ${ICAL_HTTP_ENDPOINT} 
+          image: ${SERVICE_NAME}
+          imagePullPolicy: Always
+          name: ${SERVICE_NAME}
+          ports:
+          - containerPort: 8778
+            name: jolokia
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - (curl -f 127.0.0.1:8778) >/dev/null 2>&1; test $? != 7
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ${SERVICE_NAME}
+        from:
+          kind: ImageStream
+          name: ${SERVICE_NAME}
+      type: ImageChange
+    - type: ConfigChange
+  status: {}
