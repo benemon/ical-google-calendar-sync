@@ -12,7 +12,7 @@ parameters:
 - description: The Google Calendar API Access Token. Source from https://developers.google.com/oauthplayground/
   name: GCAL_ACCESS_TOKEN
   required: true
-- description: The Volume in which to mount the GCAL_CLIENT_TOKE_FILE. Must include trailing slash (long story).
+- description: The Volume in which to mount the GCAL_CLIENT_TOKEN_FILE. Must include trailing slash (long story).
   name: GCAL_CLIENT_TOKEN_VOLUME
   required: false
 - description: The location of the Google Calendar API Token. Downloadable from https://console.developers.google.com/. Should be loaded into a Secret. If specifying a full path, don't define GCAL_CLIENT_TOKEN_VOLUME
