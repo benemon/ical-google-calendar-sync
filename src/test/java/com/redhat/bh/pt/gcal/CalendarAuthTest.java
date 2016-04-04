@@ -24,10 +24,10 @@ public class CalendarAuthTest {
 
 	private static CalendarAgent agent;
 
-	private final String ACCESS_TOKEN = "ya29..twITnIDkfQdmc_SCxVxwCxZ2oxOPqLxCYpy8hq-yMbeoc7Z-jMBK7zSxfa5P1yolmtc";
-	private final String REFRESH_TOKEN = "1/96TUNjU10YRLwLcOgiRn4IdmODYYR91bfdT1LZoc5ko";
+	private final String ACCESS_TOKEN = "token";
+	private final String REFRESH_TOKEN = "token";
 
-	private final String CLIENT_SECRET_LOCATION = "/Users/benjaminholmes/client_secret_147163994967-9vkmddng96idomioflvpl3bs0566282g.apps.googleusercontent.com.json";
+	private final String CLIENT_SECRET_LOCATION = "/Users/benjaminholmes/google-client-secret.json";
 	private final String ICS_FILE = "/Users/benjaminholmes/Downloads/allocations.ics";
 	private final String PT_CALENDAR = "PTExport";
 	private final String CALENDAR_ID = "testtesttest@googleusercontent.something.com";
