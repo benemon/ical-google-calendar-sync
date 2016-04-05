@@ -1,5 +1,7 @@
 package com.redhat.bh.pt.gcal;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -7,7 +9,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
@@ -143,6 +148,20 @@ public class CalendarAuthTest {
 
 		boolean result = agent.clearPTCalendar(credentials, PT_CALENDAR);
 		assertTrue(result);
+	}
+
+	@Test
+	public void testUUIDRandomness() {
+
+		Set<String> set = new HashSet<String>();
+		for (int i = 0; i < 5000; i++) {
+			String uid = agent.generateUid();
+			assertNotNull(uid);
+			assertFalse(set.contains(uid));
+			set.add(uid.toString());
+		}
+		assertEquals(set.size(), 5000);
+
 	}
 
 }

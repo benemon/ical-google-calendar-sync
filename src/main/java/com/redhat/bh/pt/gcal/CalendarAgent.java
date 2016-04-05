@@ -12,6 +12,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Random;
+import java.util.UUID;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -52,7 +54,7 @@ public class CalendarAgent {
 
 	private static final String SUMMARY_MASK = "%s - %s";
 
-	private static final String VERSION_MASK = "v%d-%s";
+	private static final String VERSION_MASK = "%s-%s";
 
 	private static final String LOG_ADDED_CALENDAR = "Calendar %s is not present. Creating...";
 	private static final String LOG_CLEARED_EVENTS = "Cleared %d events from Calendar %s";
@@ -184,7 +186,7 @@ public class CalendarAgent {
 
 						@Override
 						public void onFailure(GoogleJsonError e, HttpHeaders responseHeaders) {
-							LOG.error("Error Message: " + e.getMessage());
+							LOG.error("Error occurred on onFailure()", e.getErrors());
 						}
 					};
 
@@ -267,7 +269,7 @@ public class CalendarAgent {
 
 				@Override
 				public void onFailure(GoogleJsonError e, HttpHeaders responseHeaders) {
-					LOG.error("Error occurred on importCalendarContent()", e);
+					LOG.error("Error occurred on onFailure()", e.getErrors());
 				}
 			};
 
@@ -327,7 +329,6 @@ public class CalendarAgent {
 
 		List<CalendarComponent> components = calendar.getComponents();
 		events = new ArrayList<Event>();
-
 		for (CalendarComponent c : components) {
 			if (c instanceof VEvent) {
 				VEvent v = (VEvent) c;
@@ -365,11 +366,16 @@ public class CalendarAgent {
 				}
 
 				gcalEvent.setDescription(description);
-				gcalEvent.setICalUID(String.format(VERSION_MASK, System.currentTimeMillis(), v.getUid().getValue()));
+				gcalEvent.setICalUID(String.format(VERSION_MASK, generateUid(), v.getUid().getValue()));
 				events.add(gcalEvent);
 			}
 		}
 
 		return events;
+	}
+
+	public String generateUid() {
+		UUID uuid = UUID.randomUUID();
+		return uuid.toString();
 	}
 }
