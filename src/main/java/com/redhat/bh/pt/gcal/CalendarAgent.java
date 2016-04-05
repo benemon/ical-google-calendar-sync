@@ -172,30 +172,41 @@ public class CalendarAgent {
 
 			if (calendar != null) {
 				// client.calendars().delete(calendar.getId()).execute();
-				Events events = client.events().list(calendar.getId()).execute();
 
-				if (events.getItems() != null && events.getItems().size() > 0) {
-					BatchRequest batchDelete = client.batch();
+				BatchRequest batchDelete = client.batch();
 
-					// Create the callback.
-					JsonBatchCallback<Void> callback = new JsonBatchCallback<Void>() {
-
-						@Override
-						public void onSuccess(Void event, HttpHeaders responseHeaders) {
-						}
-
-						@Override
-						public void onFailure(GoogleJsonError e, HttpHeaders responseHeaders) {
-							LOG.error("Error occurred on onFailure()", e.getErrors());
-						}
-					};
-
-					for (Event e : events.getItems()) {
-						client.events().delete(calendar.getId(), e.getId()).queue(batchDelete, callback);
+				// Create the callback.
+				JsonBatchCallback<Void> callback = new JsonBatchCallback<Void>() {
+					@Override
+					public void onSuccess(Void event, HttpHeaders responseHeaders) {
 					}
 
+					@Override
+					public void onFailure(GoogleJsonError e, HttpHeaders responseHeaders) {
+						LOG.error("Error occurred on onFailure()", e.getErrors());
+					}
+				};
+
+				String pageToken = null;
+				int totalEvents = 0;
+				do {
+					Events events = client.events().list(calendar.getId()).setSingleEvents(true).setPageToken(pageToken)
+							.execute();
+					if (events.getItems() != null && events.getItems().size() > 0) {
+						for (Event e : events.getItems()) {
+							client.events().delete(calendar.getId(), e.getId()).queue(batchDelete, callback);
+							totalEvents++;
+						}
+						pageToken = events.getNextPageToken();
+					}
+
+				} while (pageToken != null);
+
+				if (totalEvents > 0) {
 					batchDelete.execute();
-					LOG.info(String.format(LOG_CLEARED_EVENTS, events.getItems().size(), calendarName));
+					LOG.info(String.format(LOG_CLEARED_EVENTS, totalEvents, calendarName));
+				} else {
+					LOG.info("Nothing to clear. Skipping...");
 				}
 
 			}
@@ -205,6 +216,7 @@ public class CalendarAgent {
 			success = false;
 		}
 		return success;
+
 	}
 
 	public com.google.api.services.calendar.model.Calendar createPTCalendar(GoogleCredential credential,
