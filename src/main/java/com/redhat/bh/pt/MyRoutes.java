@@ -57,7 +57,7 @@ public class MyRoutes extends RouteBuilder {
 		.beanRef("calendarUpdateProcess").id("calendar-processor")
 		.choice().id("output-msg-selector")
 			.when().simple(String.format(HEADER_IN_FORMAT, ProjectConfiguration.HEADER_IMPORT_RESULT) + "== true")
-				.log("Update completed successfully").id("output-msg-success")
+				.log(String.format("Update completed successfully in ${in.header.%s}s", ProjectConfiguration.HEADER_IMPORT_DURATION)).id("output-msg-success")
 			.otherwise()
 				.log("Update failed").id("output-msg-fail");
 	}

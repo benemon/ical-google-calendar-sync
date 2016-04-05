@@ -63,12 +63,18 @@ public class CalendarUpdateProcessBean {
 			LOG.error("Error occurred in processICS()", e);
 		}
 
+		long start = System.currentTimeMillis();
+
 		GoogleCredential credential = calendarAgent.authorise(clientToken, accessToken, refreshToken, token);
 		calendarAgent.clearPTCalendar(credential, ptCalendarName);
 		Calendar calendar = calendarAgent.createPTCalendar(credential, ptCalendarName);
 		boolean success = calendarAgent.importCalendar(credential, calendar, writer.toString());
+
+		long end = System.currentTimeMillis();
+
 		exchange.getIn().setHeader(ProjectConfiguration.HEADER_IMPORT_RESULT, success);
-		
+		exchange.getIn().setHeader(ProjectConfiguration.HEADER_IMPORT_DURATION, (end - start));
+
 		LOG.debug(String.format("Completed route with result: %B", success));
 	}
 
