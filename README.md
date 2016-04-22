@@ -39,6 +39,12 @@ The route can be run locally using the following Maven goal:
 
     mvn clean install exec:java -DskipTests
 
+### Using JBoss Developer Studio for Development
+
+    mvn eclipse:eclipse
+
+ Import the project from the IDE
+
 ### Running the example using OpenShift S2I template
 
 The example can also be built and run using the included S2I template *calendar-sync-template.yaml*
