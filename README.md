@@ -21,7 +21,7 @@ The source iCalendar endpoint
 ----------
 ### Running the example locally on a MAC
 
-    export GCAL_CLIENT_TOKEN_FILE=<absolutePath to the file stored>
+    export GCAL_CLIENT_TOKEN_FILE=<Absolute path to Google Calendar API Token file>
     export GCAL_REFRESH_RATE_SECONDS=600
     export ICAL_ENDPOINT=http://ptapps.redhat.com/alloc/export/<yourID>/allocation.ics
     export GCAL_TARGET_CALENDAR=GoogleCalendarName
@@ -34,6 +34,7 @@ The unit tests don't require VPN access as they use a local ICalendar file:
 
 ##### Running the Camel example
 
+Make sure you're connected to the VPN.
 The route can be run locally using the following Maven goal:
 
     mvn clean install exec:java -DskipTests
