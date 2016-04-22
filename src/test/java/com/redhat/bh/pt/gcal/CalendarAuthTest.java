@@ -12,30 +12,37 @@ import java.io.StringWriter;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
-import com.google.api.client.auth.oauth2.TokenResponse;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Calendar;
 import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
+import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.EventDateTime;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CalendarAuthTest {
 
 	private static CalendarAgent agent;
+	private static final Logger LOG = LoggerFactory.getLogger(CalendarAuthTest.class);
 
-	private final String ACCESS_TOKEN = "token";
-	private final String REFRESH_TOKEN = "token";
 
-	private final String CLIENT_SECRET_LOCATION = "/Users/benjaminholmes/google-client-secret.json";
-	private final String ICS_FILE = "/Users/benjaminholmes/Downloads/allocations.ics";
-	private final String PT_CALENDAR = "PTExport";
+	private final String PT_CALENDAR = "PTExportTest";
 	private final String CALENDAR_ID = "testtesttest@googleusercontent.something.com";
+	private final String ICS_FILE = "src/main/resources/allocation.ics";
 
 	@BeforeClass
 	public static void setUp() throws Exception {
@@ -46,21 +53,17 @@ public class CalendarAuthTest {
 	public static void tearDown() throws Exception {
 		agent = null;
 	}
-
 	@Test
-	public void testAuthorise() throws Exception {
-		TokenResponse response = new TokenResponse();
-		GoogleCredential credentials = agent.authorise(CLIENT_SECRET_LOCATION, ACCESS_TOKEN, REFRESH_TOKEN, response);
-		assertNotNull(credentials);
+	public void test1CreateCalendar() throws Exception {
+		
+		Calendar ptCal = agent.createPTCalendar( PT_CALENDAR);
+		assertNotNull(ptCal);
 	}
 
 	@Test
-	public void testGetCalendarList() throws Exception {
-		TokenResponse response = new TokenResponse();
-		GoogleCredential credentials = agent.authorise(CLIENT_SECRET_LOCATION, ACCESS_TOKEN, REFRESH_TOKEN, response);
-		assertNotNull(credentials);
-
-		CalendarList list = agent.getCalendarList(credentials);
+	public void test2GetCalendarList() throws Exception {
+		
+		CalendarList list = agent.getCalendarList();
 		assertNotNull(list);
 		Optional<CalendarListEntry> calendarListEntry = list.getItems().stream()
 				.filter(t -> t.getSummary().equalsIgnoreCase(PT_CALENDAR)).findFirst();
@@ -68,46 +71,38 @@ public class CalendarAuthTest {
 		assertNotNull(calendarListEntry);
 		assertTrue(calendarListEntry.isPresent());
 	}
-
+	
 	@Test
-	public void testGetCalendarListEntry() throws Exception {
-		TokenResponse response = new TokenResponse();
-		GoogleCredential credentials = agent.authorise(CLIENT_SECRET_LOCATION, ACCESS_TOKEN, REFRESH_TOKEN, response);
-		assertNotNull(credentials);
+	public void test3AddEventToCalendar() throws Exception {
+		
+		int numEvents = agent.getNumberOfEvents(PT_CALENDAR);	
+		Event event = new Event()
+				.setSummary("RedHat Test Event")
+				.setLocation("800 Howard St., San Francisco, CA 94103")
+				.setDescription(
+						"A chance to hear more about Google's developer products.");
 
-		CalendarListEntry entry = agent.getCalendarListEntry(credentials, PT_CALENDAR);
-		assertNotNull(entry);
+		DateTime startDateTime = new DateTime("2016-04-21T13:00:00+01:00");
+
+		EventDateTime start = new EventDateTime().setDateTime(startDateTime)
+				.setTimeZone("Europe/London");
+		event.setStart(start);
+
+		DateTime endDateTime = new DateTime("2016-04-21T14:00:00+01:00");
+		EventDateTime end = new EventDateTime().setDateTime(endDateTime)
+				.setTimeZone("Europe/London");
+		event.setEnd(end);
+	
+		agent.addEvent(PT_CALENDAR, event);
+		
+		int newNumEvents = agent.getNumberOfEvents(PT_CALENDAR);
+		
+		assertTrue(numEvents + 1 == newNumEvents);
+		
 	}
-
+	
 	@Test
-	public void testEndToEndImportCalendar() throws Exception {
-
-		TokenResponse response = new TokenResponse();
-		GoogleCredential credentials = agent.authorise(CLIENT_SECRET_LOCATION, ACCESS_TOKEN, REFRESH_TOKEN, response);
-		assertNotNull(credentials);
-
-		boolean result = agent.clearPTCalendar(credentials, PT_CALENDAR);
-		assertTrue(result);
-
-		Calendar ptCal = agent.createPTCalendar(credentials, PT_CALENDAR);
-		assertNotNull(ptCal);
-
-		InputStream is = new FileInputStream(ICS_FILE);
-
-		StringWriter writer = new StringWriter();
-		try {
-			IOUtils.copy(is, writer, "UTF-8");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		boolean output = agent.importCalendar(credentials, ptCal, writer.toString());
-		assertTrue(output);
-	}
-
-	@Test
-	public void testImportCalendar() throws Exception {
+	public void test4ImportCalendar() throws Exception {
 
 		Calendar cal = new Calendar();
 		cal.setId(CALENDAR_ID);
@@ -121,37 +116,59 @@ public class CalendarAuthTest {
 			e.printStackTrace();
 		}
 
-		boolean output = agent.importCalendar(null, cal, writer.toString(), true);
+		boolean output = agent.importCalendar(cal, writer.toString(), true);
 
 		assertTrue(output);
 	}
-
+	
 	@Test
-	public void testCreateCalendar() throws Exception {
-		TokenResponse response = new TokenResponse();
-		GoogleCredential credentials = agent.authorise(CLIENT_SECRET_LOCATION, ACCESS_TOKEN, REFRESH_TOKEN, response);
-		assertNotNull(credentials);
-
-		Calendar ptCal = agent.createPTCalendar(credentials, PT_CALENDAR);
-
-		assertNotNull(ptCal);
-
-		// needs fixing
-
+	public void test5GetCalendarListEntry() throws Exception {
+	
+		CalendarListEntry entry = agent.getCalendarListEntry( PT_CALENDAR);
+		assertNotNull(entry);
 	}
 
 	@Test
-	public void testClearCalendar() throws Exception {
-		TokenResponse response = new TokenResponse();
-		GoogleCredential credentials = agent.authorise(CLIENT_SECRET_LOCATION, ACCESS_TOKEN, REFRESH_TOKEN, response);
-		assertNotNull(credentials);
+	public void test6EndToEndImportCalendar() throws Exception {
+		LOG.info("End2End test Started");
 
-		boolean result = agent.clearPTCalendar(credentials, PT_CALENDAR);
+		boolean result = agent.clearPTCalendar( PT_CALENDAR);
+		assertTrue(result);
+
+		Calendar ptCal = agent.createPTCalendar( PT_CALENDAR);
+		assertNotNull(ptCal);
+
+		InputStream is = new FileInputStream(ICS_FILE);
+
+		StringWriter writer = new StringWriter();
+		try {
+			IOUtils.copy(is, writer, "UTF-8");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		LOG.info("Importing test calendar from: " + ICS_FILE);
+		boolean output = agent.importCalendar( ptCal, writer.toString());
+		assertTrue(output);
+		LOG.info("End2End test Completed");
+	}
+
+	@Test
+	public void test7ClearEventsFromCalendar() throws Exception {
+	
+		boolean result = agent.clearPTCalendar(PT_CALENDAR);
 		assertTrue(result);
 	}
 
 	@Test
-	public void testUUIDRandomness() {
+	public void test8DeleteCalendar() throws Exception {
+	
+		boolean result = agent.deleteCalendar(PT_CALENDAR);
+		assertTrue(result);
+	}
+	
+	@Test
+	public void test9UUIDRandomness() {
 
 		Set<String> set = new HashSet<String>();
 		for (int i = 0; i < 5000; i++) {
@@ -163,5 +180,6 @@ public class CalendarAuthTest {
 		assertEquals(set.size(), 5000);
 
 	}
+	
 
 }

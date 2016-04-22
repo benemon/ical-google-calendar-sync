@@ -15,20 +15,35 @@
  */
 package com.redhat.bh.pt;
 
+import java.util.Properties;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.camel.Endpoint;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.cdi.ContextName;
 import org.apache.camel.cdi.Uri;
+import org.apache.camel.component.properties.DefaultPropertiesParser;
+import org.apache.camel.component.properties.PropertiesComponent;
+import org.apache.camel.component.properties.PropertiesParser;
+import org.apache.deltaspike.core.api.config.ConfigProperty;
+import org.apache.deltaspike.core.api.config.ConfigResolver;
 
 import com.redhat.bh.pt.gcal.conf.ProjectConfiguration;
 
 /**
  * Configures all our Camel routes, components, endpoints and beans
  */
+
+
+
+
 @ContextName("camelContext")
 public class MyRoutes extends RouteBuilder {
+	
 
 	@Inject
 	@Uri("timer://icsPoll?fixedRate=true&period={{env:GCAL_REFRESH_RATE_SECONDS}}s")
@@ -37,17 +52,15 @@ public class MyRoutes extends RouteBuilder {
 	@Inject
 	@Uri("{{env:ICAL_ENDPOINT}}")
 	private Endpoint icalEndpoint;
-
+	
 	@Inject
 	@Uri("log:output")
 	private Endpoint resultEndpoint;
 	
 	private static final String HEADER_IN_FORMAT = "${in.header.%s}";
-
-	// Properties
+	
 	@Override
 	public void configure() throws Exception {
-
 		this.getContext().setStreamCaching(true);
 		
 		from(inputEndpoint)
@@ -60,6 +73,10 @@ public class MyRoutes extends RouteBuilder {
 				.log(String.format("Update completed successfully in ${in.header.%s}s", ProjectConfiguration.HEADER_IMPORT_DURATION)).id("output-msg-success")
 			.otherwise()
 				.log("Update failed").id("output-msg-fail");
+		
 	}
-
+	
 }
+
+	
+
