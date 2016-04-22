@@ -15,8 +15,6 @@ import org.apache.deltaspike.core.api.config.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.api.client.auth.oauth2.TokenResponse;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.services.calendar.model.Calendar;
 import com.redhat.bh.pt.gcal.conf.ProjectConfiguration;
 
@@ -34,21 +32,10 @@ public class CalendarUpdateProcessBean {
 	private String clientToken;
 
 	@Inject
-	@ConfigProperty(name = "GCAL_ACCESS_TOKEN")
-	private String accessToken;
-
-	@Inject
-	@ConfigProperty(name = "GCAL_REFRESH_TOKEN")
-	private String refreshToken;
-
-	@Inject
 	@ConfigProperty(name = "GCAL_TARGET_CALENDAR")
 	private String ptCalendarName;
 
-	private static TokenResponse token;
-
 	private CalendarUpdateProcessBean() {
-		token = new TokenResponse();
 	}
 
 	public void processICS(Exchange exchange) {
@@ -65,10 +52,9 @@ public class CalendarUpdateProcessBean {
 
 		long start = System.currentTimeMillis();
 
-		GoogleCredential credential = calendarAgent.authorise(clientToken, accessToken, refreshToken, token);
-		calendarAgent.clearPTCalendar(credential, ptCalendarName);
-		Calendar calendar = calendarAgent.createPTCalendar(credential, ptCalendarName);
-		boolean success = calendarAgent.importCalendar(credential, calendar, writer.toString());
+		calendarAgent.clearPTCalendar(ptCalendarName);
+		Calendar calendar = calendarAgent.createPTCalendar( ptCalendarName);
+		boolean success = calendarAgent.importCalendar( calendar, writer.toString());
 
 		long end = System.currentTimeMillis();
 

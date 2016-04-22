@@ -4,12 +4,6 @@ This is a small project based on Camel and Fuse Integration Services, to syncron
 
 The following environment variables need to be set:
 
-* **GCAL_ACCESS_TOKEN**  
-The Google Calendar API Access Token. Source from https://developers.google.com/oauthplayground/
-
-* **GCAL_REFRESH_TOKEN**  
-The Google Calendar API Refresh Token. Source from https://developers.google.com/oauthplayground/. Will be refreshed by the route as required.
-
 * **GCAL_CLIENT_TOKEN_FILE**  
 The location of the Google Calendar API Token. Downloadable from https://console.developers.google.com/.
 
@@ -17,7 +11,7 @@ The location of the Google Calendar API Token. Downloadable from https://console
 The rate at which we want to refresh Google Calendar from the iCalendar source
 
 * **GCAL_TARGET_CALENDAR**  
-The target Google Calendar. Will be created if it doesn't exist. 
+The target Google Calendar. Will be created if it doesn't exist.
 
 **NOTE: DO NOT MAKE THIS YOUR PRIMARY CALENDAR. ALL YOUR CONTENT WILL BE DELETED IF YOU DO. I CANNOT STRESS HIGHLY ENOUGH HOW MUCH OF A BAD IDEA THAT IS.**
 
@@ -25,11 +19,31 @@ The target Google Calendar. Will be created if it doesn't exist.
 The source iCalendar endpoint
 
 ----------
-### Running the example locally
+### Running the example locally on a MAC
 
+    export GCAL_CLIENT_TOKEN_FILE=<Absolute path to Google Calendar API Token file>
+    export GCAL_REFRESH_RATE_SECONDS=600
+    export ICAL_ENDPOINT=http://ptapps.redhat.com/alloc/export/<yourID>/allocation.ics
+    export GCAL_TARGET_CALENDAR=GoogleCalendarName
+
+##### Running the Unit Tests
+
+The unit tests don't require VPN access as they use a local ICalendar file:
+
+    mvn clean test
+
+##### Running the Camel example
+
+Make sure you're connected to the VPN.
 The route can be run locally using the following Maven goal:
 
-    mvn clean install exec:java
+    mvn clean install exec:java -DskipTests
+
+### Using JBoss Developer Studio for Development
+
+    mvn eclipse:eclipse
+
+ Import the project from the IDE
 
 ### Running the example using OpenShift S2I template
 
@@ -54,8 +68,3 @@ The Volume in which to mount the GCAL_CLIENT_TOKEN_FILE. Must include trailing s
 The name of the OpenShift Secret into which the GCAL_CLIENT_TOKEN_FILE has been passed. This is the object mounted as a Volume within the Pod. Must be created before this template is instantiated.
 
 The application template can then be instatiated, providing the environment variables listed above as parameters on either the OpenShift CLI, or the Web Console.
-
-
-
-
-
