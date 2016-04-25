@@ -1,7 +1,5 @@
 package com.redhat.bh.pt.gcal;
 
-
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -12,6 +10,8 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -28,8 +28,8 @@ import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
 import com.redhat.bh.pt.gcal.helper.DateTimeHelper;
-import com.redhat.bh.pt.gcal.GoogleCalendarService;
-
+import com.redhat.bh.pt.gcal.service.GoogleService;
+import com.redhat.bh.pt.gcal.service.ICalendarService;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
@@ -44,6 +44,10 @@ public class CalendarAgent {
 
 	private static final Logger LOG = LoggerFactory.getLogger(CalendarAgent.class);
 
+	@Inject
+	@GoogleService
+	private ICalendarService calendarService;
+
 	private static final String SUMMARY_MASK = "%s - %s";
 
 	private static final String VERSION_MASK = "%s-%s";
@@ -57,8 +61,9 @@ public class CalendarAgent {
 
 	private static com.google.api.services.calendar.Calendar client;
 
-	public CalendarAgent() {
-		client = GoogleCalendarService.getCalendarService();
+	@PostConstruct
+	public void postConstruct() {
+		client = calendarService.getCalendarService();
 	}
 
 	public CalendarList getCalendarList() {
@@ -72,23 +77,23 @@ public class CalendarAgent {
 
 		return list;
 	}
-	
+
 	public int getNumberOfEvents(String calendarName) {
 
 		try {
-		    return client.events().list(getCalendarId(calendarName)).execute().getItems().size();
+			return client.events().list(getCalendarId(calendarName)).execute().getItems().size();
 
 		} catch (IOException e) {
 			LOG.error("Error occurred on getNumberOfEvents()", e);
 		}
 		return -1;
 	}
-	
-	public int addEvent(String calendarName,Event event) {
 
-		try {			
+	public int addEvent(String calendarName, Event event) {
+
+		try {
 			client.events().insert(getCalendarId(calendarName), event).execute();
-			
+
 		} catch (IOException e) {
 			LOG.error("Error occurred on addEvent()", e);
 		}
@@ -96,40 +101,40 @@ public class CalendarAgent {
 	}
 
 	public String getCalendarId(String calendarName) {
-		
+
 		String calenderId = "";
-		try{
+		try {
 			CalendarList list = client.calendarList().list().execute();
-	
+
 			Optional<CalendarListEntry> calendarListEntryOptional = list.getItems().stream()
 					.filter(t -> t.getSummary().equalsIgnoreCase(calendarName)).findFirst();
-			
+
 			calenderId = calendarListEntryOptional.get().getId();
-		
+
 		} catch (IOException e) {
 			LOG.error("Error occurred on getCalendarId()", e);
-		}
-		catch (NoSuchElementException e) {
+		} catch (NoSuchElementException e) {
 			LOG.info("getCalendarId() -> Couldn't find GCalendar: " + calendarName);
 		}
 
-	    return calenderId;
+		return calenderId;
 	}
-	
+
 	public boolean deleteCalendar(String calendarName) {
 		try {
-			
-			client.calendars().delete(getCalendarId(calendarName));
-			
+
+			client.calendars().delete(getCalendarId(calendarName)).execute();
+
 		} catch (IOException e) {
 			LOG.error("Error occurred on deleteCalendar()", e);
 			return false;
 		}
-		LOG.debug("GCalendar "+calendarName+" has been deleted");
+		LOG.debug("GCalendar " + calendarName + " has been deleted");
 
 		return true;
 	}
-	protected CalendarListEntry getCalendarListEntry( String calendarName) {
+
+	protected CalendarListEntry getCalendarListEntry(String calendarName) {
 
 		CalendarListEntry listEntry = null;
 
@@ -142,19 +147,17 @@ public class CalendarAgent {
 			listEntry = calendarListEntryOptional.get();
 		} catch (IOException e) {
 			LOG.error("Error occurred on getCalendarListEntry()", e);
-		}
-		catch (NoSuchElementException e) {
+		} catch (NoSuchElementException e) {
 			LOG.info("getCalendarListEntry() -> Couldn't find GCalendar: " + calendarName);
 		}
 
 		return listEntry;
 	}
 
-	protected com.google.api.services.calendar.model.Calendar getCalendar(
-			String calendarName) {
+	protected com.google.api.services.calendar.model.Calendar getCalendar(String calendarName) {
 		com.google.api.services.calendar.model.Calendar calendar = null;
 
-		CalendarListEntry listEntry = this.getCalendarListEntry( calendarName);
+		CalendarListEntry listEntry = this.getCalendarListEntry(calendarName);
 
 		if (listEntry != null) {
 			try {
@@ -222,12 +225,11 @@ public class CalendarAgent {
 
 	}
 
-	public com.google.api.services.calendar.model.Calendar createPTCalendar(
-			String calendarName) {
+	public com.google.api.services.calendar.model.Calendar createPTCalendar(String calendarName) {
 
 		com.google.api.services.calendar.model.Calendar targetCalendar = null;
 		try {
-			targetCalendar = this.getCalendar( calendarName);
+			targetCalendar = this.getCalendar(calendarName);
 
 			if (targetCalendar == null) {
 				targetCalendar = new com.google.api.services.calendar.model.Calendar();
@@ -242,27 +244,26 @@ public class CalendarAgent {
 		return targetCalendar;
 	}
 
-	public boolean importCalendar( com.google.api.services.calendar.model.Calendar calendar,
-			String icsContent) {
-		return importCalendar( calendar, icsContent, false);
+	public boolean importCalendar(com.google.api.services.calendar.model.Calendar calendar, String icsContent) {
+		return importCalendar(calendar, icsContent, false);
 	}
 
-	public boolean importCalendar( com.google.api.services.calendar.model.Calendar calendar,
-			String icsContent, boolean dryRun) {
+	public boolean importCalendar(com.google.api.services.calendar.model.Calendar calendar, String icsContent,
+			boolean dryRun) {
 		boolean result = true;
 		Calendar calendarContent = this.buildCalendar(icsContent);
 
 		List<Event> processedEvents = this.processCalendarContent(calendarContent);
 
 		if (!dryRun) {
-			result = this.importCalendarContent( calendar, processedEvents);
+			result = this.importCalendarContent(calendar, processedEvents);
 		}
 		return result;
 
 	}
 
-	private boolean importCalendarContent(
-			com.google.api.services.calendar.model.Calendar calendar, List<Event> events) {
+	private boolean importCalendarContent(com.google.api.services.calendar.model.Calendar calendar,
+			List<Event> events) {
 
 		boolean success = true;
 		try {
@@ -311,18 +312,13 @@ public class CalendarAgent {
 
 		return calendar;
 	}
-   /*
-	private Calendar buildCalendar(File icsFile) {
-
-		Calendar calendar = null;
-		try {
-			calendar = buildCalendar(new FileInputStream(icsFile));
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return calendar;
-	} */
+	/*
+	 * private Calendar buildCalendar(File icsFile) {
+	 * 
+	 * Calendar calendar = null; try { calendar = buildCalendar(new
+	 * FileInputStream(icsFile)); } catch (FileNotFoundException e) { // TODO
+	 * Auto-generated catch block e.printStackTrace(); } return calendar; }
+	 */
 
 	private Calendar buildCalendar(String icsFileContent) {
 
@@ -385,5 +381,13 @@ public class CalendarAgent {
 	public String generateUid() {
 		UUID uuid = UUID.randomUUID();
 		return uuid.toString();
+	}
+
+	public ICalendarService getCalendarService() {
+		return calendarService;
+	}
+
+	public void setCalendarService(ICalendarService calendarService) {
+		this.calendarService = calendarService;
 	}
 }

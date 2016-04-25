@@ -18,11 +18,12 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-
-
-
-
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,13 +33,13 @@ import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
+import com.redhat.bh.pt.gcal.service.ICalendarService;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CalendarAuthTest {
 
 	private static CalendarAgent agent;
 	private static final Logger LOG = LoggerFactory.getLogger(CalendarAuthTest.class);
-
 
 	private final String PT_CALENDAR = "PTExportTest";
 	private final String CALENDAR_ID = "testtesttest@googleusercontent.something.com";
@@ -47,22 +48,26 @@ public class CalendarAuthTest {
 	@BeforeClass
 	public static void setUp() throws Exception {
 		agent = new CalendarAgent();
+		ICalendarService gcservice = new GoogleCalendarServiceTestImpl();
+		
+		agent.setCalendarService(gcservice);
+		agent.postConstruct();
 	}
 
 	@AfterClass
 	public static void tearDown() throws Exception {
 		agent = null;
 	}
+
 	@Test
 	public void test1CreateCalendar() throws Exception {
-		
-		Calendar ptCal = agent.createPTCalendar( PT_CALENDAR);
+		Calendar ptCal = agent.createPTCalendar(PT_CALENDAR);
 		assertNotNull(ptCal);
 	}
 
 	@Test
 	public void test2GetCalendarList() throws Exception {
-		
+
 		CalendarList list = agent.getCalendarList();
 		assertNotNull(list);
 		Optional<CalendarListEntry> calendarListEntry = list.getItems().stream()
@@ -71,36 +76,31 @@ public class CalendarAuthTest {
 		assertNotNull(calendarListEntry);
 		assertTrue(calendarListEntry.isPresent());
 	}
-	
+
 	@Test
 	public void test3AddEventToCalendar() throws Exception {
-		
-		int numEvents = agent.getNumberOfEvents(PT_CALENDAR);	
-		Event event = new Event()
-				.setSummary("RedHat Test Event")
-				.setLocation("800 Howard St., San Francisco, CA 94103")
-				.setDescription(
-						"A chance to hear more about Google's developer products.");
+
+		int numEvents = agent.getNumberOfEvents(PT_CALENDAR);
+		Event event = new Event().setSummary("RedHat Test Event").setLocation("800 Howard St., San Francisco, CA 94103")
+				.setDescription("A chance to hear more about Google's developer products.");
 
 		DateTime startDateTime = new DateTime("2016-04-21T13:00:00+01:00");
 
-		EventDateTime start = new EventDateTime().setDateTime(startDateTime)
-				.setTimeZone("Europe/London");
+		EventDateTime start = new EventDateTime().setDateTime(startDateTime).setTimeZone("Europe/London");
 		event.setStart(start);
 
 		DateTime endDateTime = new DateTime("2016-04-21T14:00:00+01:00");
-		EventDateTime end = new EventDateTime().setDateTime(endDateTime)
-				.setTimeZone("Europe/London");
+		EventDateTime end = new EventDateTime().setDateTime(endDateTime).setTimeZone("Europe/London");
 		event.setEnd(end);
-	
+
 		agent.addEvent(PT_CALENDAR, event);
-		
+
 		int newNumEvents = agent.getNumberOfEvents(PT_CALENDAR);
-		
+
 		assertTrue(numEvents + 1 == newNumEvents);
-		
+
 	}
-	
+
 	@Test
 	public void test4ImportCalendar() throws Exception {
 
@@ -120,11 +120,11 @@ public class CalendarAuthTest {
 
 		assertTrue(output);
 	}
-	
+
 	@Test
 	public void test5GetCalendarListEntry() throws Exception {
-	
-		CalendarListEntry entry = agent.getCalendarListEntry( PT_CALENDAR);
+
+		CalendarListEntry entry = agent.getCalendarListEntry(PT_CALENDAR);
 		assertNotNull(entry);
 	}
 
@@ -132,10 +132,10 @@ public class CalendarAuthTest {
 	public void test6EndToEndImportCalendar() throws Exception {
 		LOG.info("End2End test Started");
 
-		boolean result = agent.clearPTCalendar( PT_CALENDAR);
+		boolean result = agent.clearPTCalendar(PT_CALENDAR);
 		assertTrue(result);
 
-		Calendar ptCal = agent.createPTCalendar( PT_CALENDAR);
+		Calendar ptCal = agent.createPTCalendar(PT_CALENDAR);
 		assertNotNull(ptCal);
 
 		InputStream is = new FileInputStream(ICS_FILE);
@@ -148,25 +148,25 @@ public class CalendarAuthTest {
 			e.printStackTrace();
 		}
 		LOG.info("Importing test calendar from: " + ICS_FILE);
-		boolean output = agent.importCalendar( ptCal, writer.toString());
+		boolean output = agent.importCalendar(ptCal, writer.toString());
 		assertTrue(output);
 		LOG.info("End2End test Completed");
 	}
 
 	@Test
 	public void test7ClearEventsFromCalendar() throws Exception {
-	
+
 		boolean result = agent.clearPTCalendar(PT_CALENDAR);
 		assertTrue(result);
 	}
 
 	@Test
 	public void test8DeleteCalendar() throws Exception {
-	
+
 		boolean result = agent.deleteCalendar(PT_CALENDAR);
 		assertTrue(result);
 	}
-	
+
 	@Test
 	public void test9UUIDRandomness() {
 
@@ -180,6 +180,5 @@ public class CalendarAuthTest {
 		assertEquals(set.size(), 5000);
 
 	}
-	
 
 }

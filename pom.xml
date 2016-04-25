@@ -19,6 +19,8 @@
 		<fuse.version>6.2.1.redhat-084</fuse.version>
 		<fabric8.version>2.2.0.redhat-079</fabric8.version>
 		<docker.maven.plugin.version>0.13.6</docker.maven.plugin.version>
+		<powermock.version>1.4.11-redhat-1</powermock.version>
+		<javassist.version>3.18.1.GA-redhat-1</javassist.version>
 
 		<!-- Docker & Fabric8 Configs -->
 		<docker.from>jboss-fuse-6/fis-java-openshift:1.0</docker.from>
@@ -184,20 +186,17 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.4</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.4</version>
 		</dependency>
 
 		<!-- cdi api -->
 		<dependency>
 			<groupId>javax.enterprise</groupId>
 			<artifactId>cdi-api</artifactId>
-			<version>1.2</version>
 			<scope>provided</scope>
 		</dependency>
 

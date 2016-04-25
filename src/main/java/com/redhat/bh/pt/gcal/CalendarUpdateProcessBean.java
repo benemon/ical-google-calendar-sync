@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.api.services.calendar.model.Calendar;
 import com.redhat.bh.pt.gcal.conf.ProjectConfiguration;
+import com.redhat.bh.pt.gcal.CalendarAgent;
 
 @Singleton
 @Named("calendarUpdateProcess")
@@ -26,10 +27,6 @@ public class CalendarUpdateProcessBean {
 
 	@Inject
 	private CalendarAgent calendarAgent;
-
-	@Inject
-	@ConfigProperty(name = "GCAL_CLIENT_TOKEN_FILE")
-	private String clientToken;
 
 	@Inject
 	@ConfigProperty(name = "GCAL_TARGET_CALENDAR")
@@ -53,8 +50,8 @@ public class CalendarUpdateProcessBean {
 		long start = System.currentTimeMillis();
 
 		calendarAgent.clearPTCalendar(ptCalendarName);
-		Calendar calendar = calendarAgent.createPTCalendar( ptCalendarName);
-		boolean success = calendarAgent.importCalendar( calendar, writer.toString());
+		Calendar calendar = calendarAgent.createPTCalendar(ptCalendarName);
+		boolean success = calendarAgent.importCalendar(calendar, writer.toString());
 
 		long end = System.currentTimeMillis();
 
