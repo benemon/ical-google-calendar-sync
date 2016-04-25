@@ -33,6 +33,9 @@ parameters:
 - description: The source iCalendar endpoint
   name: ICAL_HTTP_ENDPOINT
   required: true
+- description: The timezone definition for the executing container
+  name: TIMEZONE
+  value: Europe/London
 - description: The Maven release version of this build
   name: RELEASE_VERSION
   value: 1.0-SNAPSHOT
@@ -154,6 +157,8 @@ objects:
             value: ${GCAL_TARGET_CALENDAR}  
           - name: ICAL_ENDPOINT
             value: ${ICAL_HTTP_ENDPOINT} 
+          - name: TZ
+            value: ${TIMEZONE} 
           image: ${SERVICE_NAME}
           imagePullPolicy: Always
           name: ${SERVICE_NAME}
