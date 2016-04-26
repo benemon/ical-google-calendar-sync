@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PTCalendars>
+	<calendar>
+		<name>PT - Joao Moura</name>
+		<endpoint>http://ptapps.redhat.com/alloc/export/7202708/allocation.ics
+		</endpoint>
+	</calendar>
+	<calendar>
+		<name>PT - Ben Holmes</name>
+		<endpoint>http://ptapps.redhat.com/alloc/export/1816820/allocation.ics
+		</endpoint>
+	</calendar>
+</PTCalendars>

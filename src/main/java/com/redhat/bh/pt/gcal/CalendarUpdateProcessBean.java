@@ -28,16 +28,14 @@ public class CalendarUpdateProcessBean {
 	@Inject
 	private CalendarAgent calendarAgent;
 
-	@Inject
-	@ConfigProperty(name = "GCAL_TARGET_CALENDAR")
-	private String ptCalendarName;
-
 	private CalendarUpdateProcessBean() {
 	}
 
 	public void processICS(Exchange exchange) {
 
 		Message in = exchange.getIn();
+		String ptCalendarName = (String) exchange.getProperty("calendarName");
+
 		InputStream body = (InputStream) in.getBody();
 
 		StringWriter writer = new StringWriter();
@@ -46,7 +44,7 @@ public class CalendarUpdateProcessBean {
 		} catch (IOException e) {
 			LOG.error("Error occurred in processICS()", e);
 		}
-
+		
 		long start = System.currentTimeMillis();
 
 		calendarAgent.clearPTCalendar(ptCalendarName);

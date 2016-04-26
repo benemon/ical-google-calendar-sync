@@ -139,6 +139,7 @@ public class CalendarAgent {
 		CalendarListEntry listEntry = null;
 
 		try {
+			
 			CalendarList list = client.calendarList().list().execute();
 
 			Optional<CalendarListEntry> calendarListEntryOptional = list.getItems().stream()

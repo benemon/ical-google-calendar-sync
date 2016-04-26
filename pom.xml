@@ -31,7 +31,7 @@
 		<fabric8.label.group>quickstarts</fabric8.label.group>
 		<fabric8.iconRef>camel</fabric8.iconRef>
 
-		<google.calendar.client.version>v3-rev173-1.21.0</google.calendar.client.version>
+		<google.calendar.client.version>v3-rev178-1.21.0</google.calendar.client.version>
 	</properties>
 
 	<repositories>
@@ -151,17 +151,22 @@
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-http</artifactId>
+			
 		</dependency>
-
-		<dependency>
+        <dependency>
 			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-google-calendar</artifactId>
+			<artifactId>camel-stax</artifactId>
 		</dependency>
-
+		
+		
 		<dependency>
 			<groupId>com.google.apis</groupId>
 			<artifactId>google-api-services-calendar</artifactId>
 			<version>${google.calendar.client.version}</version>
+		</dependency>
+        <dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-google-calendar</artifactId>
 		</dependency>
 
 		<!-- DeltaSpike -->
