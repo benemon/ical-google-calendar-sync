@@ -51,14 +51,14 @@ public class MyRoutes extends RouteBuilder {
 
 	@Inject
 	@Uri("timer://icsPoll?fixedRate=true&period={{env:GCAL_REFRESH_RATE_SECONDS}}s")
-	private Endpoint inputEndpoint;
+	private Endpoint timerEndpoint;
 	
 	@Inject
 	@Uri("log:output")
 	private Endpoint resultEndpoint;
 	
 	@Inject
-	@Uri("file://src/main/resources/?fileName=UKI_ICal_Endpoints.xml&noop=true")
+	@Uri("file://src/main/resources/?fileName=UKI_ICal_Endpoints.xml&noop=true&idempotent=false")
 	private Endpoint sourceInputFile;
 	
 	private static final String HEADER_IN_FORMAT = "${in.header.%s}";
@@ -67,8 +67,8 @@ public class MyRoutes extends RouteBuilder {
 	public void configure() throws Exception {
 		this.getContext().setStreamCaching(true);
 		
-		//from(inputEndpoint)
-		from("direct:processRequest")
+		
+		from("seda:processRequest?concurrentConsumers=8")
 		.setProperty("calendarName", simple("${body.name}"))
 		.setProperty("calendarEndpoint", simple("${body.endpoint}"))
 		.process(new Processor() {		
@@ -83,17 +83,19 @@ public class MyRoutes extends RouteBuilder {
 		.beanRef("calendarUpdateProcess").id("calendar-processor")
 		.choice().id("output-msg-selector")
 			.when().simple(String.format(HEADER_IN_FORMAT, ProjectConfiguration.HEADER_IMPORT_RESULT) + "== true")
-				.log(String.format("Update completed successfully in ${in.header.%s}s", ProjectConfiguration.HEADER_IMPORT_DURATION)).id("output-msg-success")
+				.log(String.format("Update for ${exchangeProperty.calendarName} completed successfully in ${in.header.%s}s", ProjectConfiguration.HEADER_IMPORT_DURATION)).id("output-msg-success")
 			.otherwise()
-				.log("Update failed").id("output-msg-fail");
+				.log("Update failed for ${exchangeProperty.calendarEndpoint}").id("output-msg-fail");
 		
-		
-		
-		 from(sourceInputFile)	
-			.split(StAXBuilder.stax(CalendarInfo.class))
-			.to("direct:processRequest");
 		 
+		 from("direct:pollfile")
+		 .pollEnrich(sourceInputFile.getEndpointUri())
+	     .split(StAXBuilder.stax(CalendarInfo.class))
+		 .to("seda:processRequest");
 		 
+		 from(timerEndpoint)
+		 .to("direct:pollfile");
+
 		
 	}
 	

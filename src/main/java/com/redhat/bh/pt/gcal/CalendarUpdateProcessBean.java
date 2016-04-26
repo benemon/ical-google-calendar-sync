@@ -11,7 +11,6 @@ import javax.inject.Singleton;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.commons.io.IOUtils;
-import org.apache.deltaspike.core.api.config.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,9 +31,11 @@ public class CalendarUpdateProcessBean {
 	}
 
 	public void processICS(Exchange exchange) {
+		
+		String ptCalendarName = (String) exchange.getProperty("calendarName");
+		String calendarEndppoint = (String) exchange.getProperty("calendarEndpoint");
 
 		Message in = exchange.getIn();
-		String ptCalendarName = (String) exchange.getProperty("calendarName");
 
 		InputStream body = (InputStream) in.getBody();
 
@@ -44,13 +45,13 @@ public class CalendarUpdateProcessBean {
 		} catch (IOException e) {
 			LOG.error("Error occurred in processICS()", e);
 		}
-		
+		LOG.info("Processing Calendar: "+ ptCalendarName + " URL: " + calendarEndppoint );
+
 		long start = System.currentTimeMillis();
 
 		calendarAgent.clearPTCalendar(ptCalendarName);
 		Calendar calendar = calendarAgent.createPTCalendar(ptCalendarName);
 		boolean success = calendarAgent.importCalendar(calendar, writer.toString());
-
 		long end = System.currentTimeMillis();
 
 		exchange.getIn().setHeader(ProjectConfiguration.HEADER_IMPORT_RESULT, success);
