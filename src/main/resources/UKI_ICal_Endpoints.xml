@@ -2,12 +2,10 @@
 <PTCalendars>
 	<calendar>
 		<name>PT - Joao Moura</name>
-		<endpoint>http://ptapps.redhat.com/alloc/export/7202708/allocation.ics
-		</endpoint>
+		<endpoint></endpoint>
 	</calendar>
 	<calendar>
 		<name>PT - Ben Holmes</name>
-		<endpoint>http://ptapps.redhat.com/alloc/export/1816820/allocation.ics
-		</endpoint>
+		<endpoint></endpoint>
 	</calendar>
 </PTCalendars>
