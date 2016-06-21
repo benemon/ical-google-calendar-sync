@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PTCalendars>
+	<calendar>
+		<name>PT - Joao Moura</name>
+		<endpoint></endpoint>
+	</calendar>
+	<calendar>
+		<name>PT - Ben Holmes</name>
+		<endpoint></endpoint>
+	</calendar>
+</PTCalendars>
